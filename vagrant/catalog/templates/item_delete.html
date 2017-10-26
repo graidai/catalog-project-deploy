@@ -1,0 +1,11 @@
+{% extends "header.html" %}
+{% block content %}
+<h2>Delete Item:</h2>
+<p> {{ item.name }}</p>
+<p>{{ item.description }} </p>
+<p>Are you sure you want to delete ? (item) </p>
+<form action="#" method="post">
+  <button type="submit" class="btn btn-danger">Delete</button>
+</form>
+
+{% endblock %}

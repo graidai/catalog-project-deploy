@@ -1,16 +1,12 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Catalog</title>
-  </head>
-  <body>
-    <h1>Categories</h1>
-    <ul>
-      <li>soccer</li>
-      <li>basketball</li>
-      <li>Frisbe</li>
-    </ul>
+{% extends "header.html" %}
+{% block content %}
 
-  </body>
-</html>
+<div class="col-4-md">
+  <ul>
+    {% for categories in category%}
+      <p>{{categories.name}}</p>
+    {% endfor %}
+  </ul>
+</div>
+
+{% endblock %}

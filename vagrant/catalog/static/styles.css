@@ -1,0 +1,11 @@
+/*todo fix body margin*/
+body {
+  padding-top: 70px !important;
+  margin:0;
+  font-family:"Rubik";
+  overflow: auto;
+}
+
+.nav-new {
+  background-color: teal;
+}

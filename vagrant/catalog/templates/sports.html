@@ -1,0 +1,12 @@
+{% extends "header.html" %}
+{% block content %}
+<div class="jumbotron">
+  <h3>{{item.name}}</h3>
+  <p>{{item.description}}</p>
+
+  <div>
+    <a type="button" href='{{url_for('editItem', item_id = item.id)}}' class="btn btn-success" style="display:{% if isOwner %} block {% else %} none {% endif %}">Edit</a>
+    <a type="button" href='{{url_for('deleteItem', item_id = item.id)}}' class="btn btn-danger" style="display:{% if isOwner %} block {% else %} none {% endif %}">Delete</a>
+    
+  </div>
+{% endblock %}
