@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, jsonify, url_for, flash
-from sqlalchemy import create_engine, asc
+from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, User, Category, Item
 from flask import session as login_session
@@ -208,7 +208,8 @@ def catalogJSON():
 @app.route('/catalog')
 def showCatalog():
     category = session.query(Category).order_by(asc(Category.name))
-    return render_template('landing.html', category=category)
+    items = session.query(Item).order_by(desc(Item.id)).limit(10).all()
+    return render_template('landing.html', category=category, items=items)
 
 # Show items in a particular sport
 @app.route('/catalog/<int:cat_id>/items')
@@ -256,7 +257,7 @@ def createItem():
         if request.form['item_name'] and request.form['item_desc'] and request.form['item_cat']:
             cat_name = (request.form['item_cat'])
             static_category = session.query(Category).filter_by(name=cat_name).one()
-            newItem = Item(name=request.form['item_name'], description=request.form['item_desc'], cat_id=static_category.id )
+            newItem = Item(name=request.form['item_name'], description=request.form['item_desc'], cat_id=static_category.id, user_id=login_session['user_id'] )
         else:
             flash('Please fill out all the forms')
             return render_template('item_create.html', category=category)
