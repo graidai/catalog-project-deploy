@@ -180,6 +180,29 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
 
+
+# JSON APIs to view Catalog Information
+@app.route('/catalog.JSON')
+def catalogJSON():
+    category_array = []
+
+    category = session.query(Category).order_by(asc(Category.id))
+
+    for i in category:
+        cat_object = {}
+        cat_object['id'] = i.id
+        cat_object['name'] = i.name
+        item_array = []
+        items = session.query(Item).filter_by(cat_id=i.id)
+        for j in items:
+            item_array.append(j.serialize)
+        cat_object['item'] = item_array
+        category_array.append(cat_object)
+
+    return jsonify(category=category_array)
+
+
+
 # Show catalog
 @app.route('/')
 @app.route('/catalog')
@@ -200,15 +223,6 @@ def showEachItem(cat_id, item_id):
     itemname = []
     isOwner = False
 
-    #need to make sure item belongs to the respective sport.
-
-    # if 'username' in login_session:
-    #     return redirect('/login')
-    # print(login_session['user_id'])
-    # print("user id is %s" % editedItem.user_id)
-    # if editedItem.user_id != login_session['user_id']:
-    #     return "<script>function noNo(){alert('you are not authorized to edit this item')}</script><body onload=noNo()>"
-
     try:
         # sport_id = session.query(Category).filter_by(name=sport).one()
         items = session.query(Item).filter_by(cat_id=cat_id).all()
@@ -227,6 +241,33 @@ def showEachItem(cat_id, item_id):
         return 'item not found in sports current sports category'
     else:
         return render_template('sports.html', item=oneItem, isOwner=isOwner)
+
+# Create item
+@app.route('/catalog/createitem', methods=['GET', 'POST'])
+def createItem():
+    category = session.query(Category).order_by(asc(Category.name))
+    # editedItem = session.query(Item).filter_by(id=item_id).one()
+    if 'username' not in login_session:
+        flash('Please login first to create your item')
+        return redirect('/login')
+    print(login_session['user_id'])
+
+    if request.method == 'POST':
+        if request.form['item_name'] and request.form['item_desc'] and request.form['item_cat']:
+            cat_name = (request.form['item_cat'])
+            static_category = session.query(Category).filter_by(name=cat_name).one()
+            newItem = Item(name=request.form['item_name'], description=request.form['item_desc'], cat_id=static_category.id )
+        else:
+            flash('Please fill out all the forms')
+            return render_template('item_create.html', category=category)
+
+        session.add(newItem)
+        session.commit()
+        flash('New Item created')
+        return redirect(url_for('showSportItem',cat_id=newItem.cat_id))
+    else:
+        return render_template('item_create.html', category=category)
+
 
 # Edit edit item page
 @app.route('/catalog/<int:item_id>/edit/', methods=['GET', 'POST'])
@@ -251,6 +292,7 @@ def editItem(item_id):
             editedItem.cat_id = static_category.id
         session.add(editedItem)
         session.commit()
+        flash(' %s Successfully Edited' % editedItem.name)
         return redirect(url_for('showSportItem',cat_id=editedItem.cat_id))
     else:
         return render_template('item_edit.html', category=category, item=editedItem )

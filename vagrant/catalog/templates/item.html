@@ -1,5 +1,16 @@
 {% extends "header.html" %}
 {% block content %}
+
+<div class = 'flash'>
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div class="alert alert-info" role="alert">{{ messages[0]}}</div>
+    {% endif %}
+  {% endwith %}
+
+
+</div>
+
 <div class="row">
   <div class="col-md-4">
     <ul>

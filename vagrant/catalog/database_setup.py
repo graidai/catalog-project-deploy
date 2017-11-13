@@ -18,6 +18,15 @@ class Category(Base):
     name = Column(String(250), nullable=False)
 
 
+    @property
+    def serialize(self):
+        """Return object data in easily serializeable format"""
+        return {
+            'name': self.name,
+            'id': self.id,
+        }
+
+
 class Item(Base):
     __tablename__ = 'item'
 
@@ -29,6 +38,18 @@ class Item(Base):
     category = relationship(Category)
     user_id = Column(Integer, ForeignKey('user.id'))
     user = relationship(User)
+
+    @property
+    def serialize(self):
+        """Return object data in easily serializeable format"""
+        return {
+            'name': self.name,
+            'description': self.description,
+            'item_id': self.id,
+            'cat_id': self.cat_id,
+            'cat_name': self.category.name
+
+        }
 
 
 engine = create_engine('sqlite:///itemsDatabase.db')
