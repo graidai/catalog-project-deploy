@@ -1,11 +1,158 @@
-/*todo fix body margin*/
 body {
-  padding-top: 70px !important;
-  margin:0;
-  font-family:"Rubik";
-  overflow: auto;
+  font-family: "Rubik";
+  padding-top: 70px;
+
 }
 
+
+/*everything navbars*/
+
 .nav-new {
-  background-color: teal;
+  background-color: #43B1A9;
+  box-shadow: 0 2px 4px 0 rgba(0,0,0,0.50);
+}
+
+.navbar-brand {
+  position: relative;
+  background: url("/static/catalog.png");
+  width: 35px;
+  height: 35px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  height: none;
+}
+
+.nav-new > div > div > div > div > a {
+  color: black;
+  text-decoration: none;
+}
+
+.container > .navbar-left {
+  margin-left: 15px;
+}
+.container > div > .navbar-right {
+  margin-right: 0;
+}
+
+.burger {
+  border: 2px solid black;
+}
+
+.burger-bar {
+  background-color: black;
+}
+
+.new-btn {
+  padding: 17px 0;
+}
+
+
+.navbar-right > a {
+  border: 2px solid black;
+  border-radius: 5px;
+  padding: 5px 10px;
+  color: black;
+  margin: 10px 0;
+  vertical-align: middle;
+  background-color: transparent;
+  transition: background-color .2s ease-in-out,color .2s ease-in-out;
+}
+
+.navbar-right > a:hover,
+.navbar-right > a:focus {
+  color: white ;
+  text-decoration: none;
+  background-color: black;
+}
+
+.container > .jumbotron {
+  background-color: #1D2636;
+  color: white;
+}
+
+.nav-header {
+  font-size: 1.8em;
+  font-weight: 600;
+  color: black;
+  display: flex;
+  float: left;
+  padding-left: 10px;
+  margin: 10px 0;
+}
+
+
+/*items-display*/
+.row > div > .column-header {
+  font-size: 1.8em;
+  font-weight: 600;
+  letter-spacing: 1px;
+  padding: 2px 10px;
+}
+
+.items > a {
+  padding-left: 10px;
+  color: #4FC1E9;
+  text-decoration: none;
+  font-size: 18px;
+}
+
+.items > a:hover {
+  color: white;
+  text-decoration: none;
+}
+
+.category > a {
+  padding: 5px 10px;
+  color: #F68275;
+  text-decoration: none;
+  font-size: 18px;
+  display: block;
+}
+
+.category > a:hover {
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  display: block;
+  background-color: #F68275;
+}
+
+.create-item-btn > a {
+  text-decoration: none;
+  font-size: 16px;
+  padding: 5px 10px;
+  color: white;
+  border-radius: 5px;
+  background-color: #00A998;
+  transition: background-color .2s ease-in-out,border-color .15s ease-in-out,box-shadow .2s ease-in-out;
+}
+
+.create-item-btn > a:hover {
+  border-radius: 5px;
+  background-color: #31737F;
+}
+
+.btn-wrapper {
+  display: inline-block;
+  padding-right: 15px;
+  width: 10rem;
+}
+
+.highlight-header {
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  /*display: inline-flex;*/
+  background-color: #F68275;
+}
+
+.highlight-header-green {
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  /*display: inline-flex;*/
+  background-color: #00A998;
 }

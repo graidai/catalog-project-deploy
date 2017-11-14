@@ -1,4 +1,8 @@
-{% extends "header.html" %}
+{% if isLoggedIn %}
+  {% extends "header_logout.html" %}
+{% else %}
+  {% extends "header.html" %}
+{% endif %}
 {% block content %}
 
 <div class = 'flash'>
@@ -7,22 +11,21 @@
     <div class="alert alert-info" role="alert">{{ messages[0]}}</div>
     {% endif %}
   {% endwith %}
-
-
 </div>
 
 <div class="row">
   <div class="col-md-4">
-    <ul>
+    <p class="column-header highlight-header-green">Categories</p>
+    <p>
       {% for categories in category%}
-      <p><a href="{{url_for('showSportItem', cat_id=categories.id)}}">{{categories.name}}</a></p>
+      <p class="category"><a href="{{url_for('showSportItem', cat_id=categories.id)}}">{{categories.name}}</a></p>
       {% endfor %}
-    </ul>
+    </p>
   </div>
   <div class="col-md-8">
-    <p> {{ items[0].category.name }} Items ({{items|length}} items) </p>
+    <p class="column-header highlight-header"> {{ items[0].category.name }} Items ({{items|length}} items) </p>
     {% for items in items %}
-    <p><a href="{{url_for('showEachItem', cat_id=items.cat_id, item_id=items.id)}}">{{items.name}}</a></p>
+    <p class="items"><a href="{{url_for('showEachItem', cat_id=items.cat_id, item_id=items.id)}}">{{items.name}}</a></p>
     {% endfor %}
   </div>
 </div>

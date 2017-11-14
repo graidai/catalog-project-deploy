@@ -1,12 +1,21 @@
-{% extends "header.html" %}
+{% if isLoggedIn %}
+  {% extends "header_logout.html" %}
+{% else %}
+  {% extends "header.html" %}
+{% endif %}
 {% block content %}
-<div class="jumbotron">
+
+<div class="item-banner">
   <h3>{{item.name}}</h3>
   <p>{{item.description}}</p>
 
   <div>
-    <a type="button" href='{{url_for('editItem', item_id = item.id)}}' class="btn btn-success" style="display:{% if isOwner %} block {% else %} none {% endif %}">Edit</a>
-    <a type="button" href='{{url_for('deleteItem', item_id = item.id)}}' class="btn btn-danger" style="display:{% if isOwner %} block {% else %} none {% endif %}">Delete</a>
-    
+    <p class="btn-wrapper">
+      <a type="button" href='{{url_for('editItem', item_id = item.id)}}' class="btn btn-success" style="display:{% if isOwner %} block {% else %} none {% endif %}">Edit</a>
+    </p>
+    <p class="btn-wrapper">
+      <a type="button" href='{{url_for('deleteItem', item_id = item.id)}}' class="btn btn-danger" style="display:{% if isOwner %} block {% else %} none {% endif %}">Delete</a>
+    </p>
+
   </div>
 {% endblock %}

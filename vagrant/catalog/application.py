@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, jsonify, url_for, flash
+from flask import Flask, render_template, request, redirect, jsonify, url_for, flash, redirect
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, User, Category, Item
@@ -11,6 +11,8 @@ import httplib2
 import json
 from flask import make_response
 import requests
+import bleach
+import os
 
 app = Flask(__name__)
 
@@ -26,6 +28,20 @@ Base.metadata.bind = engine
 
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
+
+
+@app.context_processor
+def override_url_for():
+    return dict(url_for=dated_url_for)
+
+def dated_url_for(endpoint, **values):
+    if endpoint == 'static':
+        filename = values.get('filename', None)
+        if filename:
+            file_path = os.path.join(app.root_path,
+                                     endpoint, filename)
+            values['q'] = int(os.stat(file_path).st_mtime)
+    return url_for(endpoint, **values)
 
 # Create anti-forgery state token
 @app.route('/login')
@@ -172,10 +188,12 @@ def gdisconnect():
         del login_session['email']
         del login_session['picture']
         del login_session['user_id']
-        response = make_response(json.dumps('Successfully disconnected.'), 200)
+        response = make_response(json.dumps('Successfully disconnected.', 200))
         response.headers['Content-Type'] = 'application/json'
-        return response
+        flash('success in disconnection')
+        return redirect(url_for('showCatalog'))
     else:
+        print login_session
         response = make_response(json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -207,25 +225,34 @@ def catalogJSON():
 @app.route('/')
 @app.route('/catalog')
 def showCatalog():
+    isLoggedIn = False
     category = session.query(Category).order_by(asc(Category.name))
     items = session.query(Item).order_by(desc(Item.id)).limit(10).all()
-    return render_template('landing.html', category=category, items=items)
+    if 'username' not in login_session:
+        return render_template('landing.html', category=category, items=items, isLoggedIn=False)
+    return render_template('landing.html', category=category, items=items, isLoggedIn=True)
 
 # Show items in a particular sport
 @app.route('/catalog/<int:cat_id>/items')
 def showSportItem(cat_id):
+    isLoggedIn = False
     category = session.query(Category).order_by(asc(Category.name))
     items = session.query(Item).filter_by(cat_id=cat_id).all()
-    return render_template('item.html', items=items, category=category)
+    if 'username' not in login_session:
+        return render_template('item.html', items=items, category=category, isLoggedIn=False)
+    return render_template('item.html', items=items, category=category, isLoggedIn=True)
 
 # Show indiviual item info of the sport
 @app.route('/catalog/<int:cat_id>/<int:item_id>/')
 def showEachItem(cat_id, item_id):
+    isLoggedIn = False
     itemname = []
     isOwner = False
-
+    if 'username' not in login_session:
+        isLoggedIn = False
+    else:
+        isLoggedIn = True
     try:
-        # sport_id = session.query(Category).filter_by(name=sport).one()
         items = session.query(Item).filter_by(cat_id=cat_id).all()
         oneItem = session.query(Item).filter_by(id=item_id).one()
     except:
@@ -233,46 +260,48 @@ def showEachItem(cat_id, item_id):
     for names in items:
         itemname.append(names.name)
     print oneItem.user_id
-
     if 'username' in login_session:
         if oneItem.user_id == login_session['user_id']:
             isOwner = True
-
+    #item number doesn't match the item category
     if oneItem.name not in itemname:
         return 'item not found in sports current sports category'
     else:
-        return render_template('sports.html', item=oneItem, isOwner=isOwner)
+        return render_template('sports.html', item=oneItem, isOwner=isOwner, isLoggedIn=isLoggedIn)
 
 # Create item
 @app.route('/catalog/createitem', methods=['GET', 'POST'])
 def createItem():
+    isLoggedIn = False
     category = session.query(Category).order_by(asc(Category.name))
-    # editedItem = session.query(Item).filter_by(id=item_id).one()
     if 'username' not in login_session:
         flash('Please login first to create your item')
         return redirect('/login')
-    print(login_session['user_id'])
-
     if request.method == 'POST':
         if request.form['item_name'] and request.form['item_desc'] and request.form['item_cat']:
             cat_name = (request.form['item_cat'])
             static_category = session.query(Category).filter_by(name=cat_name).one()
-            newItem = Item(name=request.form['item_name'], description=request.form['item_desc'], cat_id=static_category.id, user_id=login_session['user_id'] )
+            #sanitize your input
+            newItem = Item(name=bleach.clean(request.form['item_name']),
+                           description=bleach.clean(request.form['item_desc']),
+                           cat_id=static_category.id,
+                           user_id=login_session['user_id'] )
         else:
             flash('Please fill out all the forms')
-            return render_template('item_create.html', category=category)
+            return render_template('item_create.html', category=category, isLoggedIn=True)
 
         session.add(newItem)
         session.commit()
         flash('New Item created')
         return redirect(url_for('showSportItem',cat_id=newItem.cat_id))
     else:
-        return render_template('item_create.html', category=category)
+        return render_template('item_create.html', category=category, isLoggedIn=True)
 
 
 # Edit edit item page
 @app.route('/catalog/<int:item_id>/edit/', methods=['GET', 'POST'])
 def editItem(item_id):
+    isLoggedIn = False
     editedItem = session.query(Item).filter_by(id=item_id).one()
     category = session.query(Category).order_by(asc(Category.name))
     if 'username' not in login_session:
@@ -284,9 +313,9 @@ def editItem(item_id):
         return "<script>function noNo(){alert('you are not authorized to edit this item')}</script><body onload=noNo()>"
     if request.method == 'POST':
         if request.form['item_name']:
-            editedItem.name = request.form['item_name']
+            editedItem.name = bleach.clean(request.form['item_name'])
         if request.form['item_desc']:
-            editedItem.description = request.form['item_desc']
+            editedItem.description = bleach.clean(request.form['item_desc'])
         if request.form['item_cat']:
             cat_name = (request.form['item_cat'])
             static_category = session.query(Category).filter_by(name=cat_name).one()
@@ -296,11 +325,12 @@ def editItem(item_id):
         flash(' %s Successfully Edited' % editedItem.name)
         return redirect(url_for('showSportItem',cat_id=editedItem.cat_id))
     else:
-        return render_template('item_edit.html', category=category, item=editedItem )
+        return render_template('item_edit.html', category=category, item=editedItem, isLoggedIn=True )
 
 # Edit edit item page
 @app.route('/catalog/<int:item_id>/delete/', methods=['GET', 'POST'])
 def deleteItem(item_id):
+    isLoggedIn = False
     deleteItem = session.query(Item).filter_by(id=item_id).one()
     if 'username' not in login_session:
         flash('Please login first to delete your item')
@@ -313,7 +343,7 @@ def deleteItem(item_id):
         session.commit()
         return redirect(url_for('showSportItem', cat_id=deleteItem.cat_id))
     else:
-        return render_template('item_delete.html', item=deleteItem)
+        return render_template('item_delete.html', item=deleteItem, isLoggedIn=True)
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'

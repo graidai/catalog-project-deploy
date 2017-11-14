@@ -1,5 +1,10 @@
-{% extends "header.html" %}
+{% if isLoggedIn %}
+  {% extends "header_logout.html" %}
+{% else %}
+  {% extends "header.html" %}
+{% endif %}
 {% block content %}
+
 <h2>Delete Item:</h2>
 <p> {{ item.name }}</p>
 <p>{{ item.description }} </p>

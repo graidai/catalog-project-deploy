@@ -1,6 +1,9 @@
-{% extends "header.html" %}
+{% if isLoggedIn %}
+  {% extends "header_logout.html" %}
+{% else %}
+  {% extends "header.html" %}
+{% endif %}
 {% block content %}
-
 
 <div class = 'flash'>
   {% with messages = get_flashed_messages() %}

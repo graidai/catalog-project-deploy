@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="119px" height="119px" viewBox="0 0 119 119" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 47.1 (45422) - http://www.bohemiancoding.com/sketch -->
+    <title>mdc-box</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Flowback-Minimal-App-Alternative" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Mobile" transform="translate(-83.000000, -159.000000)">
+            <g id="mdc-box" transform="translate(80.000000, 159.000000)">
+                <rect id="Rectangle-2-Copy-2" fill="#1D2636" x="3" y="0" width="119" height="119"></rect>
+                <text id="CAT-A-LOG" fill="#FFFFFF" font-family="Montserrat-Medium, Montserrat" font-size="24" font-weight="400" line-spacing="27">
+                    <tspan x="13.752" y="36.6879883">CAT</tspan>
+                    <tspan x="44.568" y="63.6879883">A</tspan>
+                    <tspan x="12.168" y="90.6879883">LOG</tspan>
+                </text>
+                <text id="PP" fill="#FFFFFF" font-family="Montserrat-Medium, Montserrat" font-size="24" font-weight="400" line-spacing="27">
+                    <tspan x="77" y="69">PP</tspan>
+                </text>
+            </g>
+        </g>
+    </g>
+</svg>
