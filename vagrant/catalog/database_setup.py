@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
+
 class User(Base):
     __tablename__ = 'user'
 
@@ -12,11 +13,11 @@ class User(Base):
     email = Column(String(250), nullable=False)
     picture = Column(String(250))
 
+
 class Category(Base):
     __tablename__ = 'category'
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
-
 
     @property
     def serialize(self):
@@ -48,7 +49,6 @@ class Item(Base):
             'item_id': self.id,
             'cat_id': self.cat_id,
             'cat_name': self.category.name
-
         }
 
 

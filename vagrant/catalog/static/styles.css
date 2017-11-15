@@ -1,12 +1,10 @@
 body {
   font-family: "Rubik";
   padding-top: 70px;
-
 }
 
 
 /*everything navbars*/
-
 .nav-new {
   background-color: #43B1A9;
   box-shadow: 0 2px 4px 0 rgba(0,0,0,0.50);
@@ -22,12 +20,6 @@ body {
   margin-top: 10px;
   margin-bottom: 10px;
   margin-left: 10px;
-  height: none;
-}
-
-.nav-new > div > div > div > div > a {
-  color: black;
-  text-decoration: none;
 }
 
 .container > .navbar-left {
@@ -47,6 +39,8 @@ body {
 
 .new-btn {
   padding: 17px 0;
+  float: right;
+  margin-right: 0;
 }
 
 
@@ -127,7 +121,7 @@ body {
   color: white;
   border-radius: 5px;
   background-color: #00A998;
-  transition: background-color .2s ease-in-out,border-color .15s ease-in-out,box-shadow .2s ease-in-out;
+  transition: background-color .2s ease-in-out;
 }
 
 .create-item-btn > a:hover {
@@ -145,7 +139,6 @@ body {
   color: white;
   text-decoration: none;
   border-radius: 5px;
-  /*display: inline-flex;*/
   background-color: #F68275;
 }
 
@@ -153,6 +146,23 @@ body {
   color: white;
   text-decoration: none;
   border-radius: 5px;
-  /*display: inline-flex;*/
   background-color: #00A998;
+}
+
+.item-header {
+  padding: 5px 10px;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  background-color: #00A998;
+}
+
+.item-padding {
+  padding: 5px 10px;
+}
+
+#description {
+  width: 80vw;
+  max-width: 600px;
+  height: 300px;
 }

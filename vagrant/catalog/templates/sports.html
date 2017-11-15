@@ -6,8 +6,9 @@
 {% block content %}
 
 <div class="item-banner">
-  <h3>{{item.name}}</h3>
-  <p>{{item.description}}</p>
+  <h2 class="item-header">{{item.category.name}}</h2>
+  <h3 class="item-padding">{{item.name}}</h3>
+  <p class="item-padding">{{item.description}}</p>
 
   <div>
     <p class="btn-wrapper">
@@ -16,6 +17,5 @@
     <p class="btn-wrapper">
       <a type="button" href='{{url_for('deleteItem', item_id = item.id)}}' class="btn btn-danger" style="display:{% if isOwner %} block {% else %} none {% endif %}">Delete</a>
     </p>
-
   </div>
 {% endblock %}

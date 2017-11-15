@@ -11,24 +11,14 @@
   <nav class="nav-new navbar navbar-fixed-top">
     <div class="container">
       <div class="navbar-left">
-        <button type="button" class="navbar-toggle collapsed burger" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar burger-bar"></span>
-          <span class="icon-bar burger-bar"></span>
-          <span class="icon-bar burger-bar"></span>
-        </button>
         <a class="navbar-brand" href="{{url_for('showCatalog')}}"></a>
       </div>
       <p class="nav-header">CAT-A-LOG APP</p>
-      <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-        <div class="navbar-right new-btn">
-          <a href="{{url_for('gdisconnect')}}">Logout</a>
-        </div>
+      <div class="navbar-right new-btn">
+        <a href="{{url_for('showLogin')}}">Logout</a>
       </div>
     </div>
   </nav>
-
-
   <div class="container">
     <div class="jumbotron">
       {% block content %}

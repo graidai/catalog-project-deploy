@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, redirect, jsonify, url_for, flash, redirect
+from flask import Flask, render_template, request, make_response
+from flask import redirect, jsonify, url_for, flash, redirect
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, User, Category, Item
@@ -9,14 +10,13 @@ from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import httplib2
 import json
-from flask import make_response
 import requests
 import bleach
 import os
 
 app = Flask(__name__)
 
-#load the client_id from google credentials
+# load the client_id from google credentials
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 APPLICATION_NAME = "Udacity Catalog"
@@ -30,9 +30,13 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 
+# flask snippet to update the latest changes in static folder
+# the browser was loading the previous cache even when the static files
+# were updated in the vagrant virtual machine
 @app.context_processor
 def override_url_for():
     return dict(url_for=dated_url_for)
+
 
 def dated_url_for(endpoint, **values):
     if endpoint == 'static':
@@ -42,6 +46,7 @@ def dated_url_for(endpoint, **values):
                                      endpoint, filename)
             values['q'] = int(os.stat(file_path).st_mtime)
     return url_for(endpoint, **values)
+
 
 # Create anti-forgery state token
 @app.route('/login')
@@ -53,7 +58,7 @@ def showLogin():
     return render_template('login.html', STATE=state)
 
 
-#google login
+# google login
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
     # Validate state token
@@ -106,8 +111,9 @@ def gconnect():
     stored_access_token = login_session.get('access_token')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_access_token is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
-                                 200)
+        response = make_response(
+                 json.dumps('Current user is already connected.'),
+                 200)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -142,7 +148,9 @@ def gconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 300px; height: 300px;\
+              border-radius: 150px;-webkit-border-radius: 150px;\
+              -moz-border-radius: 150px;"> '
     return output
 
 
@@ -167,6 +175,7 @@ def getUserID(email):
         return user.id
     except:
         return None
+
 
 # DISCONNECT - Revoke a current user's token and reset their login_session
 @app.route('/gdisconnect')
@@ -194,7 +203,8 @@ def gdisconnect():
         return redirect(url_for('showCatalog'))
     else:
         print login_session
-        response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+        response = make_response(
+                   json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -216,9 +226,7 @@ def catalogJSON():
             item_array.append(j.serialize)
         cat_object['item'] = item_array
         category_array.append(cat_object)
-
     return jsonify(category=category_array)
-
 
 
 # Show catalog
@@ -228,9 +236,15 @@ def showCatalog():
     isLoggedIn = False
     category = session.query(Category).order_by(asc(Category.name))
     items = session.query(Item).order_by(desc(Item.id)).limit(10).all()
+    # check if user is loggedin, if yes display logout button and vice-versa
     if 'username' not in login_session:
-        return render_template('landing.html', category=category, items=items, isLoggedIn=False)
-    return render_template('landing.html', category=category, items=items, isLoggedIn=True)
+        return render_template(
+                    'landing.html', category=category,
+                    items=items, isLoggedIn=False)
+    return render_template(
+                'landing.html', category=category,
+                items=items, isLoggedIn=True)
+
 
 # Show items in a particular sport
 @app.route('/catalog/<int:cat_id>/items')
@@ -239,8 +253,13 @@ def showSportItem(cat_id):
     category = session.query(Category).order_by(asc(Category.name))
     items = session.query(Item).filter_by(cat_id=cat_id).all()
     if 'username' not in login_session:
-        return render_template('item.html', items=items, category=category, isLoggedIn=False)
-    return render_template('item.html', items=items, category=category, isLoggedIn=True)
+        return render_template(
+                    'item.html', items=items,
+                    category=category, isLoggedIn=False)
+    return render_template(
+                'item.html', items=items,
+                category=category, isLoggedIn=True)
+
 
 # Show indiviual item info of the sport
 @app.route('/catalog/<int:cat_id>/<int:item_id>/')
@@ -263,11 +282,14 @@ def showEachItem(cat_id, item_id):
     if 'username' in login_session:
         if oneItem.user_id == login_session['user_id']:
             isOwner = True
-    #item number doesn't match the item category
+    # item number doesn't match the item category
     if oneItem.name not in itemname:
         return 'item not found in sports current sports category'
     else:
-        return render_template('sports.html', item=oneItem, isOwner=isOwner, isLoggedIn=isLoggedIn)
+        return render_template(
+                    'sports.html', item=oneItem,
+                    isOwner=isOwner, isLoggedIn=isLoggedIn)
+
 
 # Create item
 @app.route('/catalog/createitem', methods=['GET', 'POST'])
@@ -278,24 +300,29 @@ def createItem():
         flash('Please login first to create your item')
         return redirect('/login')
     if request.method == 'POST':
-        if request.form['item_name'] and request.form['item_desc'] and request.form['item_cat']:
+        if request.form['item_name'] and\
+           request.form['item_desc'] and request.form['item_cat']:
             cat_name = (request.form['item_cat'])
-            static_category = session.query(Category).filter_by(name=cat_name).one()
-            #sanitize your input
+            static_category = session.query(Category).\
+                filter_by(name=cat_name).one()
+            # sanitize your input
             newItem = Item(name=bleach.clean(request.form['item_name']),
                            description=bleach.clean(request.form['item_desc']),
                            cat_id=static_category.id,
-                           user_id=login_session['user_id'] )
+                           user_id=login_session['user_id'])
         else:
             flash('Please fill out all the forms')
-            return render_template('item_create.html', category=category, isLoggedIn=True)
-
+            return render_template(
+                        'item_create.html',
+                        category=category, isLoggedIn=True)
         session.add(newItem)
         session.commit()
         flash('New Item created')
-        return redirect(url_for('showSportItem',cat_id=newItem.cat_id))
+        return redirect(url_for('showSportItem', cat_id=newItem.cat_id))
     else:
-        return render_template('item_create.html', category=category, isLoggedIn=True)
+        return render_template(
+                    'item_create.html',
+                    category=category, isLoggedIn=True)
 
 
 # Edit edit item page
@@ -310,7 +337,8 @@ def editItem(item_id):
     print(login_session['user_id'])
     print("user id is %s" % editedItem.user_id)
     if editedItem.user_id != login_session['user_id']:
-        return "<script>function noNo(){alert('you are not authorized to edit this item')}</script><body onload=noNo()>"
+        return "<script>function noNo(){alert('you are not authorized \
+                    to edit this item')}</script><body onload=noNo()>"
     if request.method == 'POST':
         if request.form['item_name']:
             editedItem.name = bleach.clean(request.form['item_name'])
@@ -318,14 +346,18 @@ def editItem(item_id):
             editedItem.description = bleach.clean(request.form['item_desc'])
         if request.form['item_cat']:
             cat_name = (request.form['item_cat'])
-            static_category = session.query(Category).filter_by(name=cat_name).one()
+            static_category = session.query(Category).\
+                filter_by(name=cat_name).one()
             editedItem.cat_id = static_category.id
         session.add(editedItem)
         session.commit()
         flash(' %s Successfully Edited' % editedItem.name)
-        return redirect(url_for('showSportItem',cat_id=editedItem.cat_id))
+        return redirect(url_for('showSportItem', cat_id=editedItem.cat_id))
     else:
-        return render_template('item_edit.html', category=category, item=editedItem, isLoggedIn=True )
+        return render_template(
+                    'item_edit.html', category=category,
+                    item=editedItem, isLoggedIn=True)
+
 
 # Edit edit item page
 @app.route('/catalog/<int:item_id>/delete/', methods=['GET', 'POST'])
@@ -336,14 +368,17 @@ def deleteItem(item_id):
         flash('Please login first to delete your item')
         return redirect('/login')
     if deleteItem.user_id != login_session['user_id']:
-        return "<script>function noNo(){alert('you are not authorized to edit this item')}</script><body onload=noNo()>"
+        return "<script>function noNo(){alert('you are not authorized \
+            to edit this item')}</script><body onload=noNo()>"
     if request.method == 'POST':
         session.delete(deleteItem)
         flash('%s Successfully Deleted' % deleteItem.name)
         session.commit()
         return redirect(url_for('showSportItem', cat_id=deleteItem.cat_id))
     else:
-        return render_template('item_delete.html', item=deleteItem, isLoggedIn=True)
+        return render_template(
+                    'item_delete.html',
+                    item=deleteItem, isLoggedIn=True)
 
 if __name__ == '__main__':
     app.secret_key = 'super_secret_key'
