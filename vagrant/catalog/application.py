@@ -203,10 +203,23 @@ def gdisconnect():
         return redirect(url_for('showCatalog'))
     else:
         print login_session
-        response = make_response(
-                   json.dumps('Failed to revoke token for given user.', 400))
-        response.headers['Content-Type'] = 'application/json'
-        return response
+        # problem when there are 2 simulaneous logins, one is logged output
+        # the token in login_session and the google token won't match throwing
+        # 400 error
+        try:
+            del login_session['access_token']
+            del login_session['gplus_id']
+            del login_session['username']
+            del login_session['email']
+            del login_session['picture']
+            del login_session['user_id']
+            return redirect(url_for('showCatalog'))
+        except:
+            response = make_response(json.dumps(
+                                    'Failed to revoke token for given user.',
+                                    400))
+            response.headers['Content-Type'] = 'application/json'
+            return response
 
 
 # JSON APIs to view Catalog Information
