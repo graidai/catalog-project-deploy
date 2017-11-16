@@ -308,10 +308,10 @@ def showEachItem(cat_id, item_id):
 @app.route('/catalog/createitem', methods=['GET', 'POST'])
 def createItem():
     isLoggedIn = False
-    category = session.query(Category).order_by(asc(Category.name))
     if 'username' not in login_session:
         flash('Please login first to create your item')
         return redirect('/login')
+    category = session.query(Category).order_by(asc(Category.name))
     if request.method == 'POST':
         if request.form['item_name'] and\
            request.form['item_desc'] and request.form['item_cat']:
@@ -342,11 +342,13 @@ def createItem():
 @app.route('/catalog/<int:item_id>/edit/', methods=['GET', 'POST'])
 def editItem(item_id):
     isLoggedIn = False
-    editedItem = session.query(Item).filter_by(id=item_id).one()
-    category = session.query(Category).order_by(asc(Category.name))
+    # Check authentication
     if 'username' not in login_session:
         flash('Please login first to edit your item')
         return redirect('/login')
+    editedItem = session.query(Item).filter_by(id=item_id).one()
+    category = session.query(Category).order_by(asc(Category.name))
+    # check authorization
     print(login_session['user_id'])
     print("user id is %s" % editedItem.user_id)
     if editedItem.user_id != login_session['user_id']:
@@ -376,10 +378,10 @@ def editItem(item_id):
 @app.route('/catalog/<int:item_id>/delete/', methods=['GET', 'POST'])
 def deleteItem(item_id):
     isLoggedIn = False
-    deleteItem = session.query(Item).filter_by(id=item_id).one()
     if 'username' not in login_session:
         flash('Please login first to delete your item')
         return redirect('/login')
+    deleteItem = session.query(Item).filter_by(id=item_id).one()
     if deleteItem.user_id != login_session['user_id']:
         return "<script>function noNo(){alert('you are not authorized \
             to edit this item')}</script><body onload=noNo()>"
