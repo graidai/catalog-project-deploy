@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, make_response
 from flask import redirect, jsonify, url_for, flash, redirect
 from sqlalchemy import create_engine, asc, desc
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import scoped_session
+from flask_sqlalchemy import SQLAlchemy
 from database_setup import Base, User, Category, Item
 from flask import session as login_session
 import random
@@ -20,14 +22,22 @@ app = Flask(__name__)
 CLIENT_ID = json.loads(
     open('client_secrets.json', 'r').read())['web']['client_id']
 APPLICATION_NAME = "Udacity Catalog"
-
+CLIENT_SECRET = 'i9k_0HNAHSn46Krs_J-i-EVP'
+REDIRECT_URI = 'http://localhost:3000/catalog'
+SCOPE = 'https://www.googleapis.com/auth/drive.metadata.readonly'
+app.secret_key = 'i9k_0HNAHSn46Krs_J-i-EVP'
 
 # Connect to Database and create database session
-engine = create_engine('sqlite:///itemsDatabase.db')
-Base.metadata.bind = engine
-
-DBSession = sessionmaker(bind=engine)
-session = DBSession()
+#app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///itemdb.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://catalog:student@localhost:5432/stuff'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False 
+db = SQLAlchemy(app)
+#engine = create_engine('sqlite:///itemsDatabase.db')
+#Base.metadata.bind = engine
+#
+#session_factory = sessionmaker(bind=engine)
+#Session = scoped_session(session_factory)
+#session = Session()
 
 
 # flask snippet to update the latest changes in static folder
@@ -47,6 +57,27 @@ def dated_url_for(endpoint, **values):
             values['q'] = int(os.stat(file_path).st_mtime)
     return url_for(endpoint, **values)
 
+#@app.route('/oauth2callback')
+#def oauth2callback():
+#  state = ''.join(random.choice(string.ascii_uppercase + string.digits)
+#                    for x in xrange(32))
+#  login_session['state'] = state
+#  if 'code' not in request.args:
+#    auth_uri = ('https://accounts.google.com/o/oauth2/v2/auth?response_type=code'
+#                '&client_id={}&redirect_uri={}&scope={}').format(CLIENT_ID, REDIRECT_URI, SCOPE)
+#    return redirect(auth_uri)
+#  else:
+#    auth_code = request.args.get('code')
+#    data = {'code': auth_code,
+#            'client_id': CLIENT_ID,
+#            'client_secret': CLIENT_SECRET,
+#            'redirect_uri': REDIRECT_URI,
+#            'grant_type': 'authorization_code'}
+#    r = requests.post('https://www.googleapis.com/oauth2/v4/token', data=data)
+#    login_session['credentials'] = r.text
+#    return redirect(url_for('/catalog'))
+
+
 
 # Create anti-forgery state token
 @app.route('/login')
@@ -56,6 +87,9 @@ def showLogin():
     login_session['state'] = state
     # return "The current session state is %s" % login_session['state']
     return render_template('login.html', STATE=state)
+#    return redirect(url_for('oauth2callback'))
+
+
 
 
 # google login
@@ -158,20 +192,20 @@ def gconnect():
 def createUser(login_session):
     newUser = User(name=login_session['username'], email=login_session[
                    'email'], picture=login_session['picture'])
-    session.add(newUser)
-    session.commit()
-    user = session.query(User).filter_by(email=login_session['email']).one()
+    db.session.add(newUser)
+    db.session.commit()
+    user = db.session.query(User).filter_by(email=login_session['email']).one()
     return user.id
 
 
 def getUserInfo(user_id):
-    user = session.query(User).filter_by(id=user_id).one()
+    user = db.session.query(User).filter_by(id=user_id).one()
     return user
 
 
 def getUserID(email):
     try:
-        user = session.query(User).filter_by(email=email).one()
+        user = db.session.query(User).filter_by(email=email).one()
         return user.id
     except:
         return None
@@ -227,14 +261,14 @@ def gdisconnect():
 def catalogJSON():
     category_array = []
 
-    category = session.query(Category).order_by(asc(Category.id))
+    category = db.session.query(Category).order_by(asc(Category.id))
 
     for i in category:
         cat_object = {}
         cat_object['id'] = i.id
         cat_object['name'] = i.name
         item_array = []
-        items = session.query(Item).filter_by(cat_id=i.id)
+        items = db.session.query(Item).filter_by(cat_id=i.id)
         for j in items:
             item_array.append(j.serialize)
         cat_object['item'] = item_array
@@ -247,8 +281,8 @@ def catalogJSON():
 @app.route('/catalog')
 def showCatalog():
     isLoggedIn = False
-    category = session.query(Category).order_by(asc(Category.name))
-    items = session.query(Item).order_by(desc(Item.id)).limit(10).all()
+    category = db.session.query(Category).order_by(asc(Category.name))
+    items = db.session.query(Item).order_by(desc(Item.id)).limit(10).all()
     # check if user is loggedin, if yes display logout button and vice-versa
     if 'username' not in login_session:
         return render_template(
@@ -263,8 +297,8 @@ def showCatalog():
 @app.route('/catalog/<int:cat_id>/items')
 def showSportItem(cat_id):
     isLoggedIn = False
-    category = session.query(Category).order_by(asc(Category.name))
-    items = session.query(Item).filter_by(cat_id=cat_id).all()
+    category = db.session.query(Category).order_by(asc(Category.name))
+    items = db.session.query(Item).filter_by(cat_id=cat_id).all()
     if 'username' not in login_session:
         return render_template(
                     'item.html', items=items,
@@ -285,8 +319,8 @@ def showEachItem(cat_id, item_id):
     else:
         isLoggedIn = True
     try:
-        items = session.query(Item).filter_by(cat_id=cat_id).all()
-        oneItem = session.query(Item).filter_by(id=item_id).one()
+        items = db.session.query(Item).filter_by(cat_id=cat_id).all()
+        oneItem = db.session.query(Item).filter_by(id=item_id).one()
     except:
         return 'item not found'
     for names in items:
@@ -311,12 +345,12 @@ def createItem():
     if 'username' not in login_session:
         flash('Please login first to create your item')
         return redirect('/login')
-    category = session.query(Category).order_by(asc(Category.name))
+    category = db.session.query(Category).order_by(asc(Category.name))
     if request.method == 'POST':
         if request.form['item_name'] and\
            request.form['item_desc'] and request.form['item_cat']:
             cat_name = (request.form['item_cat'])
-            static_category = session.query(Category).\
+            static_category = db.session.query(Category).\
                 filter_by(name=cat_name).one()
             # sanitize your input
             newItem = Item(name=bleach.clean(request.form['item_name']),
@@ -328,8 +362,8 @@ def createItem():
             return render_template(
                         'item_create.html',
                         category=category, isLoggedIn=True)
-        session.add(newItem)
-        session.commit()
+        db.session.add(newItem)
+        db.session.commit()
         flash('New Item created')
         return redirect(url_for('showSportItem', cat_id=newItem.cat_id))
     else:
@@ -346,8 +380,8 @@ def editItem(item_id):
     if 'username' not in login_session:
         flash('Please login first to edit your item')
         return redirect('/login')
-    editedItem = session.query(Item).filter_by(id=item_id).one()
-    category = session.query(Category).order_by(asc(Category.name))
+    editedItem = db.session.query(Item).filter_by(id=item_id).one()
+    category = db.session.query(Category).order_by(asc(Category.name))
     # check authorization
     print(login_session['user_id'])
     print("user id is %s" % editedItem.user_id)
@@ -361,11 +395,11 @@ def editItem(item_id):
             editedItem.description = bleach.clean(request.form['item_desc'])
         if request.form['item_cat']:
             cat_name = (request.form['item_cat'])
-            static_category = session.query(Category).\
+            static_category = db.session.query(Category).\
                 filter_by(name=cat_name).one()
             editedItem.cat_id = static_category.id
-        session.add(editedItem)
-        session.commit()
+        db.session.add(editedItem)
+        db.session.commit()
         flash(' %s Successfully Edited' % editedItem.name)
         return redirect(url_for('showSportItem', cat_id=editedItem.cat_id))
     else:
@@ -381,14 +415,14 @@ def deleteItem(item_id):
     if 'username' not in login_session:
         flash('Please login first to delete your item')
         return redirect('/login')
-    deleteItem = session.query(Item).filter_by(id=item_id).one()
+    deleteItem = db.session.query(Item).filter_by(id=item_id).one()
     if deleteItem.user_id != login_session['user_id']:
         return "<script>function noNo(){alert('you are not authorized \
             to edit this item')}</script><body onload=noNo()>"
     if request.method == 'POST':
-        session.delete(deleteItem)
+        db.session.delete(deleteItem)
         flash('%s Successfully Deleted' % deleteItem.name)
-        session.commit()
+        db.session.commit()
         return redirect(url_for('showSportItem', cat_id=deleteItem.cat_id))
     else:
         return render_template(
@@ -396,6 +430,8 @@ def deleteItem(item_id):
                     item=deleteItem, isLoggedIn=True)
 
 if __name__ == '__main__':
-    app.secret_key = 'super_secret_key'
-    app.debug = True
-    app.run(host='0.0.0.0', port=8000)
+    app.secret_key = 'i9k_0HNAHSn46Krs_J-i-EVP'
+    db.create_all()
+    debug = True
+    app.run()
+

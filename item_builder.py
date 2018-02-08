@@ -3,7 +3,8 @@ from sqlalchemy.orm import sessionmaker
 
 from database_setup import Base, Category, User, Item
 
-engine = create_engine('sqlite:///itemsDatabase.db')
+#engine = create_engine('postgresql+psycopg2://catalog:student@localhost:5432/stuff')
+engine = create_engine('sqlite:///itemdb.db')
 # Bind the engine to the metadata of the Base class so that the
 # declaratives can be accessed through a DBSession instance
 Base.metadata.bind = engine
@@ -86,5 +87,5 @@ fussballItem1 = Item(
               mmons/c/c8/Baby_foot_artlibre_jnl.jpg")
 session.add(fussballItem1)
 session.commit()
-
+#DBSession.remove()
 print "items added!"
